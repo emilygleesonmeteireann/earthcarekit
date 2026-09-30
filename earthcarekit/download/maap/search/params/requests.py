@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pystac_client.item_search import IntersectsLike
 
-from .....geo import Shapes
+from ..... import geo
 from .....utils._cli.parse._types import _OrbitFrameInputs, _SearchInputs
 from .....utils.time import time_to_iso, to_timestamp
 from ._params import Params
@@ -232,7 +232,7 @@ def get_requests(inputs: _SearchInputs) -> list[Params]:
 
     orbit_direction: str | None = inputs.orbit_direction
 
-    bbox: tuple[LatMin, LonMin, LatMax, LonMax] | None = None
+    # bbox: tuple[LatMin, LonMin, LatMax, LonMax] | None = None
     intersects: IntersectsLike | None = None
     if inputs.geometry is not None:
         intersects = cast(IntersectsLike, inputs.geometry)
@@ -245,10 +245,12 @@ def get_requests(inputs: _SearchInputs) -> list[Params]:
         lat: float | None = None if lt is None else float(lt)
         lon: float | None = None if ln is None else float(ln)
         if isinstance(radius_km, float) and isinstance(lat, float) and isinstance(lon, float):
-            intersects = Shapes.radius(lat, lon, radius_km)
+            intersects = geo.shapes.radius(lat, lon, radius_km)
         elif inputs.bbox_search.bbox:
             bb = tuple(float(x) for x in inputs.bbox_search.bbox.split(","))
-            bbox = (bb[1], bb[0], bb[3], bb[2])
+            print(f"{bb=}")
+            intersects = geo.shapes.bbox(bb[0], bb[1], bb[2], bb[3])
+            # bbox = (bb[1], bb[0], bb[3], bb[2])
 
     start_time: str | None = inputs.timestamps.time_range[0]
     end_time: str | None = inputs.timestamps.time_range[1]
@@ -267,7 +269,7 @@ def get_requests(inputs: _SearchInputs) -> list[Params]:
             product_type=product_type,
             product_version=product_version,
             orbit_direction=orbit_direction,
-            bbox=bbox,
+            # bbox=bbox,
             intersects=intersects,
             max_items=2000,
             start_time=start_time,
@@ -281,7 +283,7 @@ def get_requests(inputs: _SearchInputs) -> list[Params]:
                 product_type=product_type,
                 product_version=product_version,
                 orbit_direction=orbit_direction,
-                bbox=bbox,
+                # bbox=bbox,
                 intersects=intersects,
                 max_items=2000,
             )
